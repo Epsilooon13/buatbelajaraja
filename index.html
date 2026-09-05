@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Latihan kuis jaringan dengan jawaban interaktif, pembahasan, dan bank soal CSV milikmu sendiri.">
+  <meta name="theme-color" content="#101719">
+  <title>buatbelajaraja — Ruang Latihan</title>
+  <link rel="stylesheet" href="./style.css">
+  <script src="./quiz-core.js" defer></script>
+  <script src="./script.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#workspace">Langsung ke kuis</a>
+  <header class="topbar wrap">
+    <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">b.</span><span>buatbelajaraja<span class="brand-sub">RUANG LATIHAN</span></span></a>
+    <button class="button secondary" id="bank-open" type="button">Bank soal <span aria-hidden="true">↗</span></button>
+  </header>
+  <main class="wrap layout" id="workspace">
+    <aside class="sidebar">
+      <div class="eyebrow">SESI LATIHAN</div>
+      <h1>Satu soal.<br>Satu langkah maju.</h1>
+      <p class="intro">Pilih jawaban, pahami alasannya, lalu lanjutkan.</p>
+      <form id="settings">
+        <fieldset id="settings-fields">
+          <legend class="sr-only">Pengaturan sesi</legend>
+          <label for="category">Topik</label>
+          <select id="category"><option value="">Semua topik</option></select>
+          <label for="count">Jumlah soal</label>
+          <select id="count"><option value="5">5 soal</option><option value="10" selected>10 soal</option><option value="20">20 soal</option><option value="all">Semua soal</option></select>
+          <label class="check"><input type="checkbox" id="shuffle-questions" checked><span>Acak urutan soal</span></label>
+          <label class="check"><input type="checkbox" id="shuffle-options" checked><span>Acak pilihan jawaban</span></label>
+          <button class="button primary full" id="start" type="submit" disabled>Mulai latihan <span aria-hidden="true">→</span></button>
+        </fieldset>
+      </form>
+      <p id="bank-status" class="muted small" role="status">Memuat bank soal…</p>
+      <div class="sidebar-bottom"><span class="eyebrow">BANK SOAL AKTIF</span><strong id="source-name">Contoh BGP</strong><span id="bank-count" class="muted small">—</span></div>
+    </aside>
+    <section class="main-panel" aria-label="Area latihan">
+      <section id="welcome" class="panel welcome">
+        <div class="panel-top"><span class="pill">LATIHAN MANDIRI</span><span class="muted small">A / B / C / D</span></div>
+        <div class="welcome-content">
+          <div class="big-number" aria-hidden="true">01<span>—</span></div>
+          <h2>Siap menguji pemahaman?</h2>
+          <p>Mulai dari contoh soal BGP, atau gunakan bank soal CSV milikmu.</p>
+          <button id="quick-start" class="button primary" type="button" disabled>Mulai 10 soal <span aria-hidden="true">→</span></button>
+        </div>
+        <div class="welcome-footer"><span>Pembahasan setiap jawaban</span><span>Skor & ulasan di akhir</span></div>
+      </section>
+      <section id="quiz" class="panel" hidden>
+        <div class="panel-top"><span class="pill" id="topic-label"></span><span class="muted small" id="question-progress"></span></div>
+        <progress id="progress-bar" max="10" value="0" aria-label="Jumlah soal terjawab"></progress>
+        <div class="question-body">
+          <div class="question-meta"><span id="question-number" class="eyebrow"></span><span id="live-score" class="muted small"></span></div>
+          <h2 id="question-text" tabindex="-1"></h2>
+          <div id="options" class="options" aria-label="Pilihan jawaban"></div>
+          <div id="feedback" class="feedback" role="status" aria-live="polite" hidden><strong id="feedback-title"></strong><p id="feedback-text"></p></div>
+          <div class="quiz-actions"><button id="end-session" class="text-button" type="button">Akhiri sesi</button><button id="next" class="button primary" type="button" disabled>Soal berikutnya <span aria-hidden="true">→</span></button></div>
+        </div>
+      </section>
+      <section id="results" class="panel" hidden>
+        <div class="panel-top"><span class="pill">HASIL LATIHAN</span><span id="result-count" class="muted small"></span></div>
+        <div class="result-body">
+          <div class="result-heading"><div><p class="eyebrow">SKORMU</p><div class="result-score"><span id="score-number">0</span><span>/ 100</span></div></div><div><h2 id="result-title" tabindex="-1"></h2><p id="result-summary" class="muted"></p></div></div>
+          <div class="result-actions"><button id="retry" class="button primary" type="button">Latihan lagi</button><button id="retry-wrong" class="button secondary" type="button">Ulangi yang belum benar</button></div>
+          <div class="review-heading"><h3>Ulasan jawaban</h3><span class="muted small">Pelajari kembali setiap soal</span></div>
+          <div id="review-list"></div>
+        </div>
+      </section>
+      <p class="under-panel">Latihan sesuai ritmemu. Tidak ada batas waktu.</p>
+    </section>
+  </main>
+  <footer class="wrap footer"><span>buatbelajaraja <span class="muted">/</span> Latihan mandiri</span><a href="./panduan.html" target="_blank" rel="noopener">Panduan CSV & publikasi</a></footer>
+  <dialog id="bank-dialog" aria-labelledby="bank-title">
+    <div class="dialog-head"><div><div class="eyebrow">KELOLA MATERI</div><h2 id="bank-title">Bank soalmu sendiri</h2></div><button id="bank-close" class="close-button" aria-label="Tutup" type="button">×</button></div>
+    <p>Isi template di Excel, simpan sebagai <strong>CSV UTF-8</strong>, lalu pilih filenya di sini.</p>
+    <div class="upload-area"><label for="csv-file">Pilih file CSV</label><input id="csv-file" type="file" accept=".csv,text/csv"><span class="muted small">Maksimal 5 MB • pemisah koma, titik koma, atau tab</span></div>
+    <p class="notice">Impor berlaku sampai halaman ini dimuat ulang. Untuk mengganti bank soal semua pengunjung, perbarui <code>soal.csv</code> di hosting.</p>
+    <div id="import-message" role="status" class="import-message" hidden></div>
+    <div id="import-preview" class="import-preview" hidden><strong id="import-total"></strong><p id="import-topics" class="muted"></p><button id="use-import" class="button primary" type="button">Gunakan bank soal ini</button></div>
+    <div class="dialog-links"><a id="download-template" href="./soal.csv" download="template-soal.csv">Unduh contoh CSV</a><button id="restore-default" class="text-button" type="button">Kembali ke contoh BGP</button></div>
+    <details class="format-details"><summary>Format kolom CSV</summary><p><code>id, kategori, pertanyaan, opsi_a, opsi_b, opsi_c, opsi_d, jawaban, pembahasan</code></p><p>Satu soal per baris, empat opsi, dan satu kunci A/B/C/D. Setiap ID harus unik. Teks dibaca apa adanya; HTML tidak dijalankan.</p><a href="./panduan.html" target="_blank" rel="noopener">Lihat panduan lengkap</a></details>
+  </dialog>
+  <dialog id="end-dialog" aria-labelledby="end-title"><div class="dialog-head"><h2 id="end-title">Akhiri latihan?</h2></div><p>Soal yang belum dijawab akan ditandai belum dijawab dan bernilai 0.</p><div class="result-actions"><button id="continue-session" class="button secondary" type="button">Lanjut latihan</button><button id="confirm-end" class="button primary" type="button">Lihat hasil</button></div></dialog>
+</body>
+</html>
