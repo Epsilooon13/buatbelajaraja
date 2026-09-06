@@ -89,12 +89,12 @@
         options=shuffle(options.filter(o=>o.key!==q.answer),random);
         options.splice(targets[i],0,correct);
       }
-      return {...q,options,selected:null};
+      return {...q,options,selected:null,timedOut:false};
     });
   }
 
   function answer(question,key) {
-    if(question.selected!==null || !question.options.some(o=>o.key===key)) return false;
+    if(question.timedOut || question.selected!==null || !question.options.some(o=>o.key===key)) return false;
     question.selected=key;
     return true;
   }

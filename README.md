@@ -1,28 +1,26 @@
-# buatbelajaraja
+# buatbelajaraja — pembaruan pengaturan kuis
 
-Website statis untuk latihan pilihan ganda dalam bahasa Indonesia.
+## Upload pembaruan
+Ekstrak ZIP pembaruan. Upload seluruh file di dalamnya ke root repository buatbelajaraja melalui Add file > Upload files, lalu Commit changes. Tidak perlu upload ZIP sebagai satu file. Paket ini tidak berisi soal.csv, sehingga bank soal yang sudah ada tetap dipakai. Setelah GitHub Pages selesai menerbitkan perubahan, muat ulang halaman (Ctrl+F5 jika masih tampilan lama).
 
-Buka `panduan.html` untuk panduan penggunaan CSV dan publikasi GitHub Pages/cPanel.
+File runtime: index.html, style.css, script.js, quiz-core.js, curriculum.js. Panduan: panduan.html dan README.md. Semua path relatif dan sesuai GitHub Pages project site. Tidak memerlukan build atau instalasi paket.
 
-## Mengedit source code
+## Pengaturan
+- Jumlah soal: ketik bilangan bulat 1–5000 atau tekan Semua. Bila permintaan melebihi soal pada materi terpilih, sesi memakai jumlah yang tersedia tanpa duplikasi.
+- Klik Materi, pilih Module 1–26, lalu submodul x.y. Pilihan semua modul atau semua submodul juga tersedia. Angka dalam kurung adalah jumlah soal tersedia. Modul kosong tetap tercantum dan tombol mulai tidak aktif jika hasil filter kosong.
+- Waktu per soal: 10, 20, 30, atau 45 detik. Default 30 detik.
+- Waktu habis: jawaban dikunci, bernilai 0, dan pembahasan ditampilkan. Tekan Soal berikutnya untuk melanjutkan. Timer berhenti saat jawaban dikunci dan dimulai ulang untuk setiap soal berikutnya.
+- Timer tetap berjalan saat tab ditinggalkan atau dialog Akhiri sesi dibuka. Kembali ke tab akan memperbarui waktu sesuai tenggat. Sesi tidak disimpan setelah reload.
+- Ulangi yang belum benar mencakup soal salah, kehabisan waktu, dan belum dijawab. Timer serta status jawaban direset pada sesi baru.
 
-Ekstrak ZIP, lalu buka foldernya di VS Code melalui File > Open Folder. Edit `index.html` untuk nama dan teks, `style.css` untuk tampilan, `script.js` dan `quiz-core.js` untuk perilaku kuis, atau `soal.csv` untuk bank soal. Simpan perubahan, lalu uji melalui `index.html` dan impor CSV untuk pengujian lokal.
+## Mengelompokkan CSV
+Header tetap:
+`id,kategori,pertanyaan,opsi_a,opsi_b,opsi_c,opsi_d,jawaban,pembahasan`
 
-Perubahan lokal tidak otomatis mengubah website yang sudah terbit. Unggah perubahan ke hosting/GitHub yang digunakan, atau lampirkan file hasil edit di percakapan ChatGPT pemilik Site dan minta pembaruan.
+Isi kategori dengan kode dan judul submodul, misalnya `1.2 Cisco Enterprise Architecture Model`, `8.6 EIGRP Path Selection`, atau `11.5 BGP Path Selection`. Kode x.y adalah acuan utama. Kategori bertingkat seperti `11.5.2 ...` masuk ke induk 11.5, tanpa menampilkan tingkat ketiga. Nama submodul persis tanpa kode juga dikenali jika hanya ada satu kecocokan. Kategori umum seperti `Introduction` perlu kode karena ada pada banyak modul.
 
-Alamat website dikelola terpisah dari kode. Untuk Sites, buka pengaturan Site lalu Change URL untuk mengubah label alamat. Domain sendiri seperti `buatbelajaraja.my.id` harus didaftarkan lebih dulu dan disambungkan lewat pengaturan domain serta DNS.
+Beberapa judul chat lama serta kategori contoh BGP telah dipetakan dalam aliases di curriculum.js. Kategori yang belum cocok masuk Materi lainnya, tetap tersedia pada Semua modul, dan tidak dibuang. Anda dapat mengganti kategori CSV dengan kode x.y yang tepat atau menambahkan pasangan judul lama: kode di aliases. Tidak ada klasifikasi berdasarkan tebakan isi pertanyaan.
 
-## Isi paket
+Hierarki berasal dari file CCNP_ENCOR_v9_Hierarchy_Modul_1-26(1).md yang diberikan pengguna, hanya modul dan submodul. Daftar modul tidak otomatis membuat bank soal baru.
 
-- `index.html`: halaman kuis
-- `style.css`: tampilan responsif
-- `quiz-core.js`: parser CSV dan logika penilaian
-- `script.js`: interaksi aplikasi
-- `soal.csv`: 12 soal contoh BGP beserta sumber
-- `panduan.html`: panduan lengkap
-
-Tidak perlu npm, build, API key, PHP, atau database server.
-
-Untuk menguji dari folder lokal, buka `index.html`, klik Bank soal, impor `soal.csv`, lalu Gunakan bank soal ini. Ketika dipasang pada web hosting, file `soal.csv` dimuat otomatis.
-
-Impor CSV di browser hanya berlaku selama halaman terbuka. Untuk memperbarui bank soal pengunjung lain, ganti `soal.csv` pada hosting. CSV dapat diakses pengunjung, termasuk kunci jawaban. Hasil latihan tidak disimpan ke server. Ini aplikasi latihan mandiri, bukan platform ujian dengan kunci rahasia.
+Kelola soal.csv sendiri di GitHub. Setiap ID wajib unik. Bank soal dan kunci dapat dibaca pengunjung situs publik. Pengujian file lewat file:// tidak mendukung fetch CSV; gunakan GitHub Pages atau server HTTP lokal.
