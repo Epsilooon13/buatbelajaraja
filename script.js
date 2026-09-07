@@ -12,8 +12,11 @@
   let selectedMaterials=[],pendingResume=null,sessionId='',mode='study',currentConfig={},saved=false;
   let materialIndex=[];
   let bank=[], session=[], index=0, active=false, timerHandle=null, deadline=0, secondsPerQuestion=30;
-  const settings=()=>({count:Number($('count').value),shuffleQuestions:$('shuffle-questions').checked,shuffleOptions:$('shuffle-options').checked,prioritize:$('prioritize-mistakes').checked,materials:selectedMaterials.map(m=>({...m})),mode:$('mode').value,seconds:Number($('duration').value)});
-  const pool=()=>H.filterMany(bank,selectedMaterials);
+  const language=()=>$('language').value==='en'?'en':'id';
+  const languageLabel=value=>value==='en'?'English':'Bahasa Indonesia';
+  const languageBank=()=>C.filterLanguage(bank,language());
+  const settings=()=>({language:language(),count:Number($('count').value),shuffleQuestions:$('shuffle-questions').checked,shuffleOptions:$('shuffle-options').checked,prioritize:$('prioritize-mistakes').checked,materials:selectedMaterials.map(m=>({...m})),mode:$('mode').value,seconds:Number($('duration').value)});
+  const pool=()=>H.filterMany(languageBank(),selectedMaterials);
   const resolved=q=>q.selected!==null||q.timedOut;
   function show(view) {
     for(const id of ['quiz','results'])$(id).hidden=id!==view;
@@ -71,7 +74,8 @@
     $('start').disabled=!!pendingResume||!available||!valid;
     $('all-questions').disabled=!available;
     $('start').textContent='Mulai '+requested+' soal →';
-    $('bank-status').textContent=!available?'Belum ada soal untuk materi ini.':!valid?'Masukkan jumlah soal bulat antara 1 dan 5.000.':available+' soal tersedia · sesi menggunakan '+requested+' soal.';
+    $('bank-status').textContent=!available?'Belum ada soal '+languageLabel(language())+' untuk materi ini. Pilih bahasa atau materi lain.':!valid?'Masukkan jumlah soal bulat antara 1 dan 5.000.':available+' soal tersedia · sesi menggunakan '+requested+' soal.';
+    $('language-help').textContent=languageBank().length+' soal '+languageLabel(language())+' tersedia di bank. Pilih bahasa pertanyaan, jawaban, dan pembahasan sebelum mulai sesi.';
     const labels=selectedMaterials.map(materialLabel);
     const label=!labels.length?'Semua materi':labels.length===1?labels[0]:labels.length+' materi dipilih';
     $('material-summary').textContent=label;
@@ -85,35 +89,42 @@
     select.disabled=!moduleId;
     const mod=H.modules.find(m=>m.id===moduleId);
     if(mod)for(const sub of mod.children){
-      const n=H.filter(bank,moduleId,sub.id).length;
+      const n=H.filter(languageBank(),moduleId,sub.id).length;
       select.add(new Option(sub.id+' '+sub.title+' ('+n+')',sub.id));
     }
-    if(moduleId==='other')for(const topic of [...new Set(H.filter(bank,'other').map(q=>q.category))].sort())select.add(new Option(topic,topic));
+    if(moduleId==='other')for(const topic of [...new Set(H.filter(bank,'other').map(q=>q.category))].sort())select.add(new Option(topic+' ('+H.filter(languageBank(),'other',topic).length+')',topic));
     updateControls();
+  }
+  function refreshMaterials(){
+    const draftModule=$('module').value,draftSubmodule=$('submodule').value;
+    const available=languageBank();
+    materialIndex=H.makeIndex(available);
+    $('module').replaceChildren(new Option('Pilih modul',''));
+    for(const mod of H.modules){
+      const n=H.filter(available,mod.id).length;
+      $('module').add(new Option('Module '+mod.id+' — '+mod.title+' ('+n+')',mod.id));
+    }
+    if(H.filter(bank,'other').length)$('module').add(new Option('Materi lainnya ('+H.filter(available,'other').length+')','other'));
+    if([...$('module').children].some(o=>o.value===draftModule))$('module').value=draftModule;
+    updateSubmodules();
+    if([...$('submodule').children].some(o=>o.value===draftSubmodule))$('submodule').value=draftSubmodule;
+    renderSelections();renderSearch();updateControls();
   }
   function setBank(questions) {
     bank=questions;
     history.reconcile(bank);
-    materialIndex=H.makeIndex(bank);
-    renderSearch();
-    $('module').replaceChildren(new Option('Pilih modul',''));
-    for(const mod of H.modules){
-      const n=H.filter(bank,mod.id).length;
-      $('module').add(new Option('Module '+mod.id+' — '+mod.title+' ('+n+')',mod.id));
-    }
-    const other=H.filter(bank,'other').length;
-    if(other)$('module').add(new Option('Materi lainnya ('+other+')','other'));
     $('source-name').textContent='soal.csv';
-    $('bank-count').textContent=bank.length+' soal';
-    updateSubmodules();renderSelections();updateModeHelp();show('welcome');
+    $('bank-count').textContent=C.filterLanguage(bank,'id').length+' Indonesia · '+C.filterLanguage(bank,'en').length+' English';
+    refreshMaterials();updateModeHelp();show('welcome');
     const previous=sessionStore.read(bank);
     if(previous.status==='ready'){
       pendingResume=previous.state;
-      $('resume-summary').textContent=(pendingResume.mode==='exam'?'Mode Ujian':'Mode Belajar')+' · soal '+(pendingResume.index+1)+' dari '+pendingResume.session.length+' · '+pendingResume.session.filter(resolved).length+' soal sudah dikunci';
+      $('language').value=pendingResume.config.language;refreshMaterials();
+      $('resume-summary').textContent=languageLabel(pendingResume.config.language)+' · '+(pendingResume.mode==='exam'?'Mode Ujian':'Mode Belajar')+' · soal '+(pendingResume.index+1)+' dari '+pendingResume.session.length+' · '+pendingResume.session.filter(resolved).length+' soal sudah dikunci';
       $('resume-panel').hidden=false;$('settings-fields').disabled=true;updateControls();
     }else if(previous.status!=='empty'){
       $('resume-notice').hidden=false;
-      $('resume-notice').textContent=previous.status==='changed'?'Soal pada sesi tersimpan sudah diubah atau dihapus. Mulai sesi baru menggunakan bank soal terbaru.':previous.status==='invalid'?'Sesi tersimpan tidak dapat dibaca. Kamu bisa memulai sesi baru.':'Penyimpanan sesi tidak tersedia di browser ini. Sesi belum dapat dipulihkan setelah halaman ditutup.';
+      $('resume-notice').textContent=previous.status==='changed'?'Soal atau bahasa pada sesi tersimpan sudah diubah, atau soalnya dihapus. Mulai sesi baru menggunakan bank soal terbaru.':previous.status==='invalid'?'Sesi tersimpan tidak dapat dibaca. Kamu bisa memulai sesi baru.':'Penyimpanan sesi tidak tersedia di browser ini. Sesi belum dapat dipulihkan setelah halaman ditutup.';
       if(previous.status!=='unavailable')sessionStore.clear();
     }
   }
@@ -143,7 +154,7 @@
     document.body.classList.toggle('session-active',value);
   }
   function setSessionCopy(){
-    $('session-mode').textContent=mode==='exam'?'Mode Ujian':'Mode Belajar';
+    $('session-mode').textContent=(mode==='exam'?'Mode Ujian':'Mode Belajar')+' · '+languageLabel(currentConfig.language);
     $('session-hint').textContent=mode==='exam'?'Jawaban dikunci saat dipilih. Pembahasan dan skor muncul setelah sesi selesai.':'Baca pembahasan sebelum menekan Soal berikutnya.';
     $('end-description').textContent=(secondsPerQuestion?'Timer tetap berjalan selama dialog ini terbuka. ':'')+'Soal yang belum dijawab bernilai 0.';
   }
@@ -153,6 +164,7 @@
     currentConfig={...config,materials:config.materials.map(m=>({...m}))};
     session=C.makeSession(questions,config);
     if(!session.length){updateControls();return;}
+    $('language').value=currentConfig.language;refreshMaterials();
     sessionId=window.crypto?.randomUUID?.()||Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
     index=0;lockSession(true);setSessionCopy();show('quiz');renderQuestion();
   }
@@ -162,9 +174,9 @@
     session=data.session;sessionId=data.id;mode=data.mode;secondsPerQuestion=data.seconds;index=data.index;deadline=data.deadline;currentConfig=data.config;
     selectedMaterials=currentConfig.materials.map(m=>({...m}));
     $('count').value=currentConfig.count==='all'?session.length:currentConfig.count;
-    $('mode').value=mode;$('duration').value=String(secondsPerQuestion);
+    $('mode').value=mode;$('duration').value=String(secondsPerQuestion);$('language').value=currentConfig.language;
     $('shuffle-questions').checked=currentConfig.shuffleQuestions;$('shuffle-options').checked=currentConfig.shuffleOptions;$('prioritize-mistakes').checked=currentConfig.prioritize;
-    $('resume-panel').hidden=true;renderSelections();updateControls();updateModeHelp();
+    $('resume-panel').hidden=true;refreshMaterials();updateModeHelp();
     for(const q of session)if(resolved(q))recordOutcome(q);
     lockSession(true);setSessionCopy();show('quiz');renderQuestion(true);
   }
@@ -177,6 +189,7 @@
     $('progress-bar').value=session.filter(resolved).length;
     $('question-number').textContent='SOAL '+String(index+1).padStart(2,'0');
     $('live-score').textContent=mode==='exam'?session.filter(resolved).length+' soal dikunci':scored.correct+' benar';
+    $('question-text').setAttribute('lang',q.language||'id');$('options').setAttribute('lang',q.language||'id');
     F.render($('question-text'),q.prompt);
     $('options').replaceChildren();
     q.options.forEach((option,i)=>{
@@ -223,10 +236,12 @@
     $('feedback').classList.toggle('neutral',exam);
     if(exam){
       $('feedback-title').textContent=q.timedOut?'Waktu habis.':'Jawaban tersimpan.';
+      $('feedback-text').setAttribute('lang','id');
       F.render($('feedback-text'),'Pembahasan dan skor ditampilkan setelah sesi selesai.');
     }else{
       const letter=C.LETTERS[q.options.findIndex(o=>o.key===q.answer)];
       $('feedback-title').textContent=q.timedOut?'Waktu habis. Jawaban yang benar: '+letter+'.':q.selected===q.answer?'✓ Jawabanmu benar.':'Belum tepat. Jawaban yang benar: '+letter+'.';
+      $('feedback-text').setAttribute('lang',q.language||'id');
       F.render($('feedback-text'),q.explanation);
     }
     $('feedback').hidden=false;$('progress-bar').value=session.filter(resolved).length;
@@ -253,16 +268,18 @@
       const summary=document.createElement('summary');
       const icon=document.createElement('span');icon.className='review-icon';icon.textContent=correct?'✓':q.selected===null?'—':'×';
       icon.setAttribute('aria-label',correct?'Benar':q.selected===null?'Belum dijawab':'Salah');
+      const reviewLanguage=q.language||'id';
       const formatted=F.hasBlocks(q.prompt);
       const title=document.createElement('span');title.className='review-title';title.textContent=(i+1)+'. '+(formatted?F.preview(q.prompt):q.prompt);
+      title.setAttribute('lang',reviewLanguage);
       const caret=document.createElement('span');caret.className='review-caret';caret.textContent='+';caret.setAttribute('aria-hidden','true');
       summary.append(icon,title,caret);details.append(summary);
       const answer=document.createElement('div');answer.className='review-answer';
       const describe=key=>{const n=q.options.findIndex(o=>o.key===key);return n<0?'Belum dijawab':C.LETTERS[n]+'. '+q.options[n].text;};
-      if(formatted){const prompt=document.createElement('div');prompt.className='review-prompt';F.render(prompt,q.prompt);answer.append(prompt);}
+      if(formatted){const prompt=document.createElement('div');prompt.className='review-prompt';prompt.setAttribute('lang',reviewLanguage);F.render(prompt,q.prompt);answer.append(prompt);}
       const own=document.createElement('div');own.className='review-response';F.render(own,'Jawabanmu: '+(q.timedOut?'Waktu habis':describe(q.selected)));
       const expected=document.createElement('div');expected.className='review-response';F.render(expected,'Jawaban benar: '+describe(q.answer));
-      const explanation=document.createElement('div');explanation.className='explanation';F.render(explanation,q.explanation);
+      const explanation=document.createElement('div');explanation.className='explanation';explanation.setAttribute('lang',reviewLanguage);F.render(explanation,q.explanation);
       answer.append(own,expected,explanation);details.append(answer);
       details.addEventListener('toggle',()=>{caret.textContent=details.open?'−':'+';});
       $('review-list').append(details);
@@ -287,6 +304,7 @@
   }
   $('add-material').addEventListener('click',()=>addMaterial({module:$('module').value,submodule:$('submodule').value}));
   $('clear-materials').addEventListener('click',()=>{if(active||pendingResume)return;selectedMaterials=[];renderSelections();renderSearch();updateControls();});
+  $('language').addEventListener('change',()=>{if(active||pendingResume)return;refreshMaterials();});
   $('mode').addEventListener('change',updateModeHelp);
   $('resume-session').addEventListener('click',resume);
   $('discard-session').addEventListener('click',()=>$('discard-dialog').showModal());
@@ -321,7 +339,7 @@
   $('continue-session').addEventListener('click',()=>$('end-dialog').close());
   $('confirm-end').addEventListener('click',()=>{$('end-dialog').close();tick();finish();});
   $('retry').addEventListener('click',startFromSettings);
-  $('retry-wrong').addEventListener('click',()=>begin(session.filter(q=>q.selected!==q.answer),{...settings(),count:'all'}));
+  $('retry-wrong').addEventListener('click',()=>begin(session.filter(q=>q.selected!==q.answer),{...currentConfig,count:'all'}));
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick();});
   window.addEventListener('pagehide',()=>{if(active){tick();saveSession();}});
   window.addEventListener('beforeunload',event=>{if(active){tick();saveSession();if(!saved){event.preventDefault();event.returnValue='';}}});

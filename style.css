@@ -72,3 +72,5 @@ body.session-active .layout{display:block;max-width:960px}body.session-active .s
 #feedback-text{margin-top:8px}.review-response{margin:8px 0}.review-prompt{padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--border)}
 .review-answer .explanation{margin-top:14px}.review-answer .code-content{color:#e3edf3}
 @media(max-width:700px){.code-content{font-size:.875rem;padding:12px}.review-answer{padding-left:0}.code-label{padding:7px 10px}.option{gap:9px}.option-status{display:none}}
+
+.language-setting{grid-column:1/-1;min-width:0}.language-setting label{margin-top:0}#language-help{margin-top:8px}.mode-badge{overflow-wrap:anywhere}

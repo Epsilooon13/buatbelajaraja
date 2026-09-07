@@ -6,13 +6,13 @@
   <meta name="description" content="Latihan kuis jaringan dengan jawaban interaktif, pembahasan, dan bank soal CSV milikmu sendiri.">
   <meta name="theme-color" content="#101719">
   <title>buatbelajaraja — Ruang Latihan</title>
-  <link rel="stylesheet" href="./style.css?v=05041b3b7f30">
-  <script src="./quiz-core.js?v=05041b3b7f30" defer></script>
-  <script src="./curriculum.js?v=05041b3b7f30" defer></script>
-  <script src="./practice-history.js?v=05041b3b7f30" defer></script>
-  <script src="./quiz-session.js?v=05041b3b7f30" defer></script>
-  <script src="./content-format.js?v=05041b3b7f30" defer></script>
-  <script src="./script.js?v=05041b3b7f30" defer></script>
+  <link rel="stylesheet" href="./style.css?v=5a0716dc68b0">
+  <script src="./quiz-core.js?v=5a0716dc68b0" defer></script>
+  <script src="./curriculum.js?v=5a0716dc68b0" defer></script>
+  <script src="./practice-history.js?v=5a0716dc68b0" defer></script>
+  <script src="./quiz-session.js?v=5a0716dc68b0" defer></script>
+  <script src="./content-format.js?v=5a0716dc68b0" defer></script>
+  <script src="./script.js?v=5a0716dc68b0" defer></script>
 </head>
 <body class="setup-view">
   <a class="skip" href="#workspace">Langsung ke kuis</a>
@@ -33,6 +33,7 @@
       <form id="settings">
         <fieldset id="settings-fields">
           <legend class="sr-only">Pengaturan sesi</legend>
+          <div class="language-setting"><label for="language">Bahasa soal</label><select id="language" aria-describedby="language-help"><option value="id" selected>Bahasa Indonesia</option><option value="en">English</option></select><p id="language-help" class="muted small" role="status">Pilih bahasa pertanyaan, pilihan jawaban, dan pembahasan.</p></div>
           <details id="material-picker" class="material-picker">
             <summary id="material-toggle"><span>Materi<span id="material-summary" class="muted small">Semua materi</span></span><span aria-hidden="true">⌄</span></summary>
             <div class="material-fields">

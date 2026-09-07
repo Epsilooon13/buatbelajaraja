@@ -6,6 +6,10 @@
   'use strict';
   const HEADERS = ['id','kategori','pertanyaan','opsi_a','opsi_b','opsi_c','opsi_d','jawaban','pembahasan'];
   const LETTERS = ['A','B','C','D'];
+  const LANGUAGES = ['id','en'];
+  const languageAliases = new Map([['id','id'],['indonesia','id'],['bahasa indonesia','id'],['indonesian','id'],['en','en'],['english','en'],['inggris','en'],['bahasa inggris','en']]);
+  function normalizeLanguage(value){return languageAliases.get(String(value??'').trim().toLowerCase())||null;}
+  function filterLanguage(bank,language='id'){return bank.filter(q=>(q.language||'id')===language);}
 
   function tokenize(text, delimiter) {
     const rows = [];
@@ -62,7 +66,9 @@
       seen.add(v.id);
       const answer=v.jawaban.toUpperCase();
       if(!LETTERS.includes(answer)) {errors.push('Data ke-'+record+': jawaban harus A, B, C, atau D.');continue;}
-      questions.push({id:v.id,category:v.kategori,prompt:v.pertanyaan,options:LETTERS.map(key=>({key,text:v['opsi_'+key.toLowerCase()]})),answer,explanation:v.pembahasan});
+      const language=names.includes('bahasa')?normalizeLanguage(v.bahasa):'id';
+      if(!language){errors.push('Data ke-'+record+': bahasa wajib diisi id (Indonesia) atau en (English).');continue;}
+      questions.push({id:v.id,category:v.kategori,prompt:v.pertanyaan,options:LETTERS.map(key=>({key,text:v['opsi_'+key.toLowerCase()]})),answer,explanation:v.pembahasan,language});
     }
     if(errors.length) throw new Error(errors.slice(0,6).join('\n')+(errors.length>6?'\n… dan '+(errors.length-6)+' kesalahan lain.':'')+'\nBank soal belum diganti.');
     if(!questions.length) throw new Error('Tidak ada soal yang valid.');
@@ -76,7 +82,7 @@
   }
 
   function makeSession(bank, settings={}, random=Math.random) {
-    let pool=bank.filter(q=>!settings.category || q.category===settings.category);
+    let pool=(settings.language?filterLanguage(bank,settings.language):bank).filter(q=>!settings.category || q.category===settings.category);
     if(settings.shuffleQuestions!==false) pool=shuffle(pool,random);
     const requested=settings.count==='all'?pool.length:Math.max(1,Number(settings.count)||10);
     pool=pool.slice(0,requested);
@@ -105,5 +111,5 @@
     const unanswered=session.filter(q=>q.selected===null).length;
     return {total,correct,unanswered,wrong:total-correct-unanswered,percent:total?Math.round(correct/total*100):0};
   }
-  return {parseCSV,shuffle,makeSession,answer,score,HEADERS,LETTERS};
+  return {parseCSV,shuffle,makeSession,answer,score,HEADERS,LETTERS,LANGUAGES,normalizeLanguage,filterLanguage};
 }));
