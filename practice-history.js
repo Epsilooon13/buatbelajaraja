@@ -24,10 +24,11 @@
       if(!persistent)return;
       try{storage.setItem(key,JSON.stringify({version:1,records}));}catch{persistent=false;}
     }
-    function record(q,now=Date.now()){
+    function record(q,now=Date.now(),eventId=null){
       if(q.selected===null&&!q.timedOut)return false;
       const previous=get(q), correct=q.selected===q.answer;
-      records[q.id]={fingerprint:fingerprint(q),attempts:(previous?.attempts||0)+1,misses:(previous?.misses||0)+(correct?0:1),streak:correct?(previous?.streak||0)+1:0,last:now};
+      if(eventId&&previous?.lastEvent===eventId)return false;
+      records[q.id]={fingerprint:fingerprint(q),attempts:(previous?.attempts||0)+1,misses:(previous?.misses||0)+(correct?0:1),streak:correct?(previous?.streak||0)+1:0,last:now,lastEvent:eventId};
       persist();return true;
     }
     function reconcile(bank){

@@ -1160,5 +1160,19 @@ function search(query,entries){
  if(!terms.length)return [];
  return entries.filter(e=>terms.every(term=>normalize(e.label).includes(term)));
 }
-return {modules,resolve,filter,makeIndex,search};
+function covers(parent,child){return parent.module===child.module&&(!parent.submodule||parent.submodule===child.submodule);}
+function addSelection(selected,item){
+ const next={module:item.module,submodule:item.submodule||''};
+ if(selected.some(x=>covers(x,next)))return selected.slice();
+ return [...selected.filter(x=>!covers(next,x)),next];
+}
+function filterMany(bank,selected=[]){
+ if(!selected.length)return bank.slice();
+ return bank.filter(q=>{
+   const location=resolve(q.category);
+   const item={module:location.module,submodule:location.module==='other'?q.category:location.submodule};
+   return selected.some(x=>covers(x,item));
+ });
+}
+return {modules,resolve,filter,makeIndex,search,covers,addSelection,filterMany};
 });

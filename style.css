@@ -47,3 +47,28 @@ body.session-active .layout{display:block;max-width:960px}body.session-active .s
 .search-result:hover,.search-result:focus-visible{background:var(--surface-2)}.search-result:focus-visible{outline-offset:-3px}
 @media(max-width:700px){body.setup-view .layout{width:calc(100% - 24px);padding-block:16px}body.setup-view .sidebar{padding:18px}body.setup-view #settings-fields{gap:14px}body.setup-view #settings-fields>.check{grid-column:1/-1}.footer{padding-block:18px}.search-result{font-size:1rem}}
 @media(max-width:380px){body.setup-view #settings-fields{grid-template-columns:minmax(0,1fr)}.setting-group{grid-column:1/-1}}
+/* Multiple materials, study/exam modes, and resumable sessions. */
+.mode-setting{grid-column:1/-1;min-width:0}.mode-setting>label{display:block;font-size:.875rem;font-weight:600;margin-bottom:7px}#mode-help{margin-top:7px;line-height:1.5}
+#add-material{margin:14px 0 10px}.selected-materials{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0;padding:0;max-height:190px;overflow-y:auto}
+.selected-materials li{display:flex;align-items:center;gap:10px;max-width:100%;padding:7px 10px;border:1px solid #537c6b;border-radius:9px;background:#20382f;font-size:.875rem;line-height:1.5}
+.selected-materials li>span{overflow-wrap:anywhere;min-width:0}.remove-material{flex-shrink:0;display:grid;place-items:center;min-width:36px;min-height:36px;background:transparent;border:0;border-radius:6px;font-size:1.35rem;color:var(--accent)}.remove-material:hover{background:var(--surface-2)}
+.resume-panel{border:1px solid #537c6b;border-radius:12px;background:#20382f;padding:18px;margin:0 0 22px}.resume-panel h2{font-size:1.1rem}.resume-panel p{margin-top:8px;overflow-wrap:anywhere}.resume-actions{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-top:14px}#resume-notice{margin:0 0 18px}
+.option.selected{background:#253a43;border-color:#99cddd}.option.selected .option-letter{background:#c0e9f2;color:#162f36;border-color:#c0e9f2}
+.feedback.neutral{border-color:#99cddd;background:#25343a}.feedback.neutral strong{color:#c0e9f2}.mode-badge{font-size:.875rem;color:var(--muted)}#save-status{margin-top:7px}.search-result:disabled{opacity:.75}
+@media(max-width:700px){.resume-panel{padding:14px}.selected-materials li{width:100%;justify-content:space-between}.quiz-indicators{gap:10px}}
+
+/* Explicit code markers in question, answers and review. No HTML from CSV. */
+.rich-content{min-width:0;max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere}
+.quiz-prose{display:block;white-space:pre-wrap;overflow-wrap:anywhere}
+.code-block{display:block;min-width:0;max-width:100%;margin:14px 0;border:1px solid #3b5259;border-radius:10px;background:#0b1217;color:#e3edf3;overflow:hidden;font-weight:400;letter-spacing:normal;text-align:left;white-space:normal}
+.code-label{display:block;padding:7px 12px;background:#15222a;border-bottom:1px solid #30434b;color:#9fcec5;font:600 .875rem/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.05em}
+.code-content{display:block;max-width:100%;padding:14px 16px;margin:0;overflow-x:auto;white-space:pre;overflow-wrap:normal;word-break:normal;tab-size:4;font:400 .9375rem/1.65 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;color:inherit;text-transform:none;user-select:text;-webkit-user-select:text;overscroll-behavior-x:contain}
+.code-content:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
+.code-block:first-child{margin-top:0}.code-block:last-child{margin-bottom:0}
+.option,.review-item,.review-title,.review-answer{min-width:0}
+.option.has-code,.option-copy.has-code{min-width:0}
+.option-copy .code-block{margin:10px 0}.option-copy .code-block:first-child{margin-top:0}.option-copy .code-block:last-child{margin-bottom:0}
+.option-copy .code-content{font-size:.875rem;padding:10px 12px}
+#feedback-text{margin-top:8px}.review-response{margin:8px 0}.review-prompt{padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--border)}
+.review-answer .explanation{margin-top:14px}.review-answer .code-content{color:#e3edf3}
+@media(max-width:700px){.code-content{font-size:.875rem;padding:12px}.review-answer{padding-left:0}.code-label{padding:7px 10px}.option{gap:9px}.option-status{display:none}}
