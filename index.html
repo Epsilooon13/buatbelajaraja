@@ -6,12 +6,13 @@
   <meta name="description" content="Latihan kuis jaringan dengan jawaban interaktif, pembahasan, dan bank soal CSV milikmu sendiri.">
   <meta name="theme-color" content="#101719">
   <title>buatbelajaraja — Ruang Latihan</title>
-  <link rel="stylesheet" href="./style.css">
-  <script src="./quiz-core.js" defer></script>
-  <script src="./curriculum.js" defer></script>
-  <script src="./script.js" defer></script>
+  <link rel="stylesheet" href="./style.css?v=29b0833b127b">
+  <script src="./quiz-core.js?v=29b0833b127b" defer></script>
+  <script src="./curriculum.js?v=29b0833b127b" defer></script>
+  <script src="./practice-history.js?v=29b0833b127b" defer></script>
+  <script src="./script.js?v=29b0833b127b" defer></script>
 </head>
-<body>
+<body class="setup-view">
   <a class="skip" href="#workspace">Langsung ke kuis</a>
   <header class="topbar wrap">
     <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">b.</span><span>buatbelajaraja<span class="brand-sub">RUANG LATIHAN</span></span></a>
@@ -25,8 +26,12 @@
         <fieldset id="settings-fields">
           <legend class="sr-only">Pengaturan sesi</legend>
           <details id="material-picker" class="material-picker">
-            <summary><span>Materi<span id="material-summary" class="muted small">Semua materi</span></span><span aria-hidden="true">⌄</span></summary>
+            <summary id="material-toggle"><span>Materi<span id="material-summary" class="muted small">Semua materi</span></span><span aria-hidden="true">⌄</span></summary>
             <div class="material-fields">
+              <label for="material-search">Cari materi</label>
+              <div class="search-row"><input id="material-search" type="search" placeholder="Cari HSRP, EIGRP, atau 8.6" autocomplete="off" aria-controls="search-results" aria-describedby="search-status"><button id="search-clear" class="text-button" type="button" hidden>Hapus</button></div>
+              <p id="search-status" class="muted small" role="status" aria-live="polite" hidden></p>
+              <ul id="search-results" class="search-results" aria-label="Hasil pencarian materi" hidden></ul>
               <label for="module">Chapter / modul</label>
               <select id="module"><option value="">Semua modul</option></select>
               <label for="submodule">Submodul</label>
@@ -34,10 +39,11 @@
               <p id="selection-detail" class="muted small"></p>
             </div>
           </details>
-          <label for="count">Jumlah soal</label>
-          <div class="count-row"><input id="count" type="number" min="1" max="5000" step="1" value="10" required inputmode="numeric" aria-describedby="bank-status"><button id="all-questions" class="button secondary" type="button">Semua</button></div>
-          <label for="duration">Waktu per soal</label>
-          <select id="duration"><option value="10">10 detik</option><option value="20">20 detik</option><option value="30" selected>30 detik</option><option value="45">45 detik</option></select>
+          <div class="setting-group"><label for="count">Jumlah soal</label>
+          <div class="count-row"><input id="count" type="number" min="1" max="5000" step="1" value="10" required inputmode="numeric" aria-describedby="bank-status"><button id="all-questions" class="button secondary" type="button">Semua</button></div></div>
+          <div class="setting-group"><label for="duration">Waktu per soal</label>
+          <select id="duration"><option value="10">10 detik</option><option value="20">20 detik</option><option value="30" selected>30 detik</option><option value="45">45 detik</option></select></div>
+          <div class="priority-setting"><label class="check"><input type="checkbox" id="prioritize-mistakes" checked aria-describedby="priority-status"><span>Prioritaskan soal yang sering salah</span></label><p id="priority-status" class="muted small" role="status">Catatan latihan tersimpan di browser ini.</p></div>
           <label class="check"><input type="checkbox" id="shuffle-questions" checked><span>Acak urutan soal</span></label>
           <label class="check"><input type="checkbox" id="shuffle-options" checked><span>Acak pilihan jawaban</span></label>
           <button class="button primary full" id="start" type="submit" disabled>Mulai latihan <span aria-hidden="true">→</span></button>
@@ -46,17 +52,7 @@
       <p id="bank-status" class="muted small" role="status">Memuat bank soal…</p>
       <div class="sidebar-bottom"><span class="eyebrow">BANK SOAL AKTIF</span><strong id="source-name">soal.csv</strong><span id="bank-count" class="muted small">—</span></div>
     </aside>
-    <section class="main-panel" aria-label="Area latihan">
-      <section id="welcome" class="panel welcome">
-        <div class="panel-top"><span class="pill">LATIHAN MANDIRI</span><span class="muted small">A / B / C / D</span></div>
-        <div class="welcome-content">
-          <div class="big-number" aria-hidden="true">01<span>—</span></div>
-          <h2>Siap menguji pemahaman?</h2>
-          <p>Pilih materi, jumlah soal, dan waktu per soal untuk memulai.</p>
-          <button id="quick-start" class="button primary" type="button" disabled>Mulai 10 soal <span aria-hidden="true">→</span></button>
-        </div>
-        <div class="welcome-footer"><span>Pembahasan setiap jawaban</span><span>Skor & ulasan di akhir</span></div>
-      </section>
+    <section class="main-panel" id="main-panel" aria-label="Area latihan" hidden>
       <section id="quiz" class="panel" hidden>
         <div class="panel-top"><span class="pill" id="topic-label"></span><div class="quiz-indicators"><span class="muted small" id="question-progress"></span><span id="timer" class="timer" role="timer" aria-label="Sisa waktu" aria-live="off">30 dtk</span></div></div>
         <progress id="progress-bar" max="10" value="0" aria-label="Jumlah soal terjawab"></progress>

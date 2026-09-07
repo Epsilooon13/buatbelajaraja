@@ -3,25 +3,65 @@
   const $=id=>document.getElementById(id);
   const C=window.QuizCore;
   const H=window.QuizCurriculum;
+  const P=window.QuizPractice;
+  let storage=null;
+  try{storage=window.localStorage;}catch{}
+  const history=P.createStore(storage,'buatbelajaraja:practice:v1:'+(location.pathname||'/').replace(/index\.html$/,''));
+  const recorded=new WeakSet();
+  let materialIndex=[];
   let bank=[], session=[], index=0, active=false, timerHandle=null, deadline=0, secondsPerQuestion=30;
   const settings=()=>({count:Number($('count').value),shuffleQuestions:$('shuffle-questions').checked,shuffleOptions:$('shuffle-options').checked});
   const pool=()=>H.filter(bank,$('module').value,$('submodule').value);
   const resolved=q=>q.selected!==null||q.timedOut;
-  function show(view) {for(const id of ['welcome','quiz','results']) $(id).hidden=id!==view;}
+  function show(view) {
+    for(const id of ['quiz','results'])$(id).hidden=id!==view;
+    $('main-panel').hidden=view==='welcome';
+    document.body.classList.toggle('setup-view',view==='welcome');
+  }
+  function updatePriorityStatus(){
+    const weak=pool().filter(q=>P.weakScore(history.get(q))>0).length;
+    const text=!$('prioritize-mistakes').checked?'Prioritas dimatikan. Latihan mengikuti pilihan materi dan acak soal.':weak?weak+' soal perlu diulang; dicampur dengan soal lain yang tersedia.':'Belum ada soal yang perlu diprioritaskan pada materi ini.';
+    $('priority-status').textContent=text+(history.isPersistent()?' Catatan tersimpan di browser ini.':' Penyimpanan browser tidak tersedia; catatan hanya berlaku sampai halaman ditutup atau dimuat ulang.');
+  }
+  function clearSearch(){
+    $('material-search').value='';renderSearch();
+  }
+  function renderSearch(){
+    const query=$('material-search').value.trim(),results=H.search(query,materialIndex);
+    $('search-clear').hidden=!query;
+    $('search-status').hidden=!query;
+    $('search-results').hidden=!query||!results.length;
+    $('search-results').replaceChildren();
+    $('search-status').textContent=results.length?results.length+' materi ditemukan. Pilih hasil untuk mengatur sesi.':'Materi tidak ditemukan. Coba nama atau kode submodul lain.';
+    for(const result of results){
+      const li=document.createElement('li'),button=document.createElement('button');
+      button.type='button';button.className='search-result';
+      const label=document.createElement('span');label.textContent=result.label;
+      const meta=document.createElement('span');meta.className='muted small';meta.textContent=(result.submodule?'Submodul · ':'Modul · ')+result.count+' soal';
+      button.append(label,meta);
+      button.addEventListener('click',()=>{
+        if(active)return;
+        $('module').value=result.module;updateSubmodules();
+        $('submodule').value=result.submodule;updateControls();clearSearch();
+        $('material-picker').open=false;$('material-toggle').focus();
+      });
+      li.append(button);$('search-results').append(li);
+    }
+  }
   function updateControls() {
     const available=pool().length, count=Number($('count').value);
     const valid=Number.isInteger(count)&&count>=1&&count<=5000;
     const requested=valid?Math.min(available,count):0;
     $('start').disabled=!available||!valid;
-    $('quick-start').disabled=!available||!valid;
     $('all-questions').disabled=!available;
-    $('quick-start').textContent='Mulai '+requested+' soal →';
+    $('start').textContent='Mulai '+requested+' soal →';
     $('bank-status').textContent=!available?'Belum ada soal untuk materi ini.':!valid?'Masukkan jumlah soal bulat antara 1 dan 5.000.':available+' soal tersedia · sesi menggunakan '+requested+' soal.';
     const mod=H.modules.find(m=>m.id===$('module').value);
     const sub=mod?.children.find(c=>c.id===$('submodule').value);
     const label=sub?sub.id+' '+sub.title:mod?'Module '+mod.id+' — '+mod.title:$('module').value==='other'?($('submodule').value||'Materi lainnya'):'Semua materi';
     $('material-summary').textContent=label;
     $('selection-detail').textContent=label;
+    updatePriorityStatus();
   }
   function updateSubmodules() {
     const select=$('submodule'), moduleId=$('module').value;
@@ -37,6 +77,9 @@
   }
   function setBank(questions) {
     bank=questions;
+    history.reconcile(bank);
+    materialIndex=H.makeIndex(bank);
+    renderSearch();
     $('module').replaceChildren(new Option('Semua modul',''));
     for(const mod of H.modules){
       const n=H.filter(bank,mod.id).length;
@@ -109,6 +152,7 @@
   }
   function revealAnswer(key){
     const q=session[index];
+    if(!recorded.has(q)){recorded.add(q);history.record(q);updatePriorityStatus();}
     [...$('options').children].forEach((button,i)=>{
       const option=q.options[i];
       button.disabled=true;
@@ -171,10 +215,26 @@
   function startFromSettings(){
     if(!$('settings').reportValidity()||!pool().length)return;
     $('material-picker').open=false;
-    begin(pool(),settings());
+    const config=settings();
+    const selected=$('prioritize-mistakes').checked?P.prioritize(pool(),config.count,history):pool();
+    begin(selected,config);
   }
   $('settings').addEventListener('submit',e=>{e.preventDefault();startFromSettings();});
-  $('quick-start').addEventListener('click',startFromSettings);
+  $('prioritize-mistakes').addEventListener('change',updatePriorityStatus);
+  $('material-search').addEventListener('input',renderSearch);
+  $('material-search').addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();$('search-results').firstElementChild?.firstElementChild?.click();}
+    if(e.key==='ArrowDown'){e.preventDefault();$('search-results').firstElementChild?.firstElementChild?.focus();}
+    if(e.key==='Escape'){e.preventDefault();clearSearch();}
+  });
+  $('search-clear').addEventListener('click',()=>{clearSearch();$('material-search').focus();});
+  $('search-results').addEventListener('keydown',e=>{
+    if(e.key==='Escape'){e.preventDefault();clearSearch();$('material-search').focus();return;}
+    if(e.key!=='ArrowDown'&&e.key!=='ArrowUp')return;
+    const buttons=[...$('search-results').querySelectorAll('button')];
+    const next=buttons.indexOf(e.target)+(e.key==='ArrowDown'?1:-1);
+    e.preventDefault();if(next<0)$('material-search').focus();else buttons[Math.min(next,buttons.length-1)]?.focus();
+  });
   $('module').addEventListener('change',updateSubmodules);
   $('submodule').addEventListener('change',updateControls);
   $('count').addEventListener('input',updateControls);
